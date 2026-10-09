@@ -1,0 +1,7 @@
+[Unit]
+Description=Haftalik virus taramasi
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/virus-tarama.sh
+Nice=19
+IOSchedulingClass=idle

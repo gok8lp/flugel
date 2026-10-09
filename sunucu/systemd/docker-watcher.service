@@ -1,0 +1,6 @@
+[Unit]
+Description=Docker kritik durum izleyici
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/docker-watcher.sh

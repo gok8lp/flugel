@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/ikon.svg" type="image/svg+xml">
+<title>FLUGEL</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="duzen">
+  <!-- sol menu -->
+  <nav class="sol">
+    <a class="logo" href="#/ana">FLUGEL</a>
+    <div id="menu"></div>
+    <button class="ai-buyuk" data-ai-ac>✦ FLUGEL AI</button>
+  </nav>
+
+  <!-- orta: akis -->
+  <main class="orta">
+    <header class="ust-bar">
+      <div class="ust-baslik"><span class="logo-kucuk">F</span><h1 id="sayfa-baslik">Sana özel</h1></div>
+      <div class="sekmeler" id="sekmeler"></div>
+    </header>
+    <button id="yeni-gonderi" class="yeni-gonderi" hidden></button>
+    <section id="icerik"></section>
+    <div id="nobet" class="nobet"><div class="donen"></div></div>
+  </main>
+
+  <!-- sag: simdi -->
+  <aside class="sag">
+    <div class="kutu" id="kutu-sunucu"></div>
+    <div class="kutu" id="kutu-one"></div>
+    <div class="kutu" id="kutu-anime"></div>
+    <div class="kutu" id="kutu-gundemde"></div>
+    <div class="kutu" id="kutu-mac"></div>
+    <p class="altbilgi">FLUGEL · yalnızca senin için · flugelserver</p>
+  </aside>
+</div>
+
+<!-- telefon alt menu -->
+<nav class="alt-menu" id="alt-menu"></nav>
+<nav class="tam-menu" id="tam-menu" hidden></nav>
+<button class="ai-yuzen" data-ai-ac aria-label="FLUGEL AI">✦</button>
+
+<!-- AI cekmecesi -->
+<div class="ai-cekmece" id="ai" hidden>
+  <div class="ai-ust"><b>✦ FLUGEL AI</b><span class="soluk">gemma3 · sunucuda, verin dışarı çıkmaz</span><button class="kapat" data-ai-kapat>✕</button></div>
+  <div class="ai-mesajlar" id="ai-mesajlar"></div>
+  <div class="ai-oneriler" id="ai-oneriler">
+    <button>Bugünün özetini çıkar</button><button>Hafta sonu hangi maçlar var?</button>
+    <button>Bu hafta hangi animelerin yeni bölümü çıkıyor?</button><button>Hangi oyunu oynamalıyım?</button>
+  </div>
+  <form class="ai-form" id="ai-form"><textarea id="ai-girdi" rows="1" placeholder="Bir şey sor…"></textarea><button>Gönder</button></form>
+</div>
+
+<!-- video oynatici -->
+<div class="video-perde" id="video" hidden><div class="video-kutu"><button class="kapat" data-video-kapat>✕</button><iframe id="video-iframe" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div></div>
+
+<script src="/app.js"></script>
+</body>
+</html>

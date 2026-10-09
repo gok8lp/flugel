@@ -1,0 +1,16 @@
+#!/bin/bash
+# Merkezi bildirim: Telegram (yapilandirildiysa) + kayit. PC bu kaydi izleyip masaustu bildirimi gosterir.
+# Kullanim: bildirim "mesaj"   |  bildirim --seviye UYARI "mesaj"
+SEV=BILGI; [ "$1" = "--seviye" ] && { SEV=$2; shift 2; }
+MSG="$*"; MSG=$(printf '%b' "${MSG//%/\\x}"); MSG=${MSG//+/ }
+[ -z "$MSG" ] && exit 0
+TS=$(date '+%F %T')
+echo "$TS|$SEV|$MSG" | tr '\n' ' ' >> /var/log/sistem-bildirim.log; echo >> /var/log/sistem-bildirim.log
+install -d -o 1000 -g 1000 /home/flugel/sistem-bakim/durum 2>/dev/null
+echo "$TS|$SEV|$(echo "$MSG" | tr '\n' ' ')" >> /home/flugel/sistem-bakim/durum/bildirimler.log 2>/dev/null
+chown 1000:1000 /home/flugel/sistem-bakim/durum/bildirimler.log 2>/dev/null
+[ -r /etc/sistem-bakim/telegram.env ] && . /etc/sistem-bakim/telegram.env
+if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+  curl -s -m 15 "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=[flugelserver] $SEV: $MSG" >/dev/null
+fi
+exit 0

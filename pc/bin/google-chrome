@@ -1,0 +1,3 @@
+#!/bin/bash
+# Chrome + otomatik resim-icinde-resim (YouTube sekme degisince) + orta tekerlek kaydirma (sistem-bakim)
+exec /usr/bin/google-chrome-stable --enable-features=AutoPictureInPictureForVideoPlayback,BrowserInitiatedAutomaticPictureInPicture --enable-blink-features=MiddleClickAutoscroll "$@"

@@ -1,0 +1,227 @@
+#!/usr/bin/env python3
+"""Ust panel eklentisi icin veri: kripto fiyatlari, bu PC ve sunucu durumu (JSON).
+Kullanim: ust-panel-veri kripto | pc | sunucu     (sistem-bakim)
+Evde LAN, disarida Tailscale uzerinden sunucuya ulasir (ssh config Match kurali)."""
+import json, os, subprocess, sys, time, urllib.request
+
+CACHE = os.path.expanduser("~/.cache/sistem-bakim")
+os.makedirs(CACHE, exist_ok=True)
+
+COINS = [("bitcoin", "BTC", "₿"), ("ethereum", "ETH", "Ξ"), ("solana", "SOL", "◎"),
+         ("binancecoin", "BNB", "B"), ("ripple", "XRP", "✕"), ("dogecoin", "DOGE", "Ð"),
+         ("avalanche-2", "AVAX", "A"), ("cardano", "ADA", "₳")]
+
+
+def cached(name, max_age, fn):
+    """fn() sonucunu max_age saniye onbellekte tutar; hata olursa eski veriyi dondurur."""
+    p = os.path.join(CACHE, name + ".json")
+    try:
+        if time.time() - os.path.getmtime(p) < max_age:
+            return json.load(open(p))
+    except OSError:
+        pass
+    try:
+        data = fn()
+        json.dump(data, open(p, "w"))
+        return data
+    except Exception as e:  # ag yoksa eski veriyi goster
+        try:
+            old = json.load(open(p))
+            old["eski"] = True
+            return old
+        except Exception:
+            return {"hata": str(e)[:80]}
+
+
+PAPRIKA = {"bitcoin": "btc-bitcoin", "ethereum": "eth-ethereum", "solana": "sol-solana",
+           "binancecoin": "bnb-binance-coin", "ripple": "xrp-xrp", "dogecoin": "doge-dogecoin",
+           "avalanche-2": "avax-avalanche", "cardano": "ada-cardano"}
+
+
+def kripto_paprika():
+    """Yedek kaynak: bazi aglar (okul/operator) borsa API'lerini engelliyor, CoinPaprika genelde acik."""
+    req = urllib.request.Request("https://api.coinpaprika.com/v1/tickers?quotes=USD,TRY,EUR",
+                                 headers={"User-Agent": "flugel-panel/1.0"})
+    d = {t["id"]: t for t in json.load(urllib.request.urlopen(req, timeout=15))}
+    out = []
+    for cid, sym, ikon in COINS:
+        t = d.get(PAPRIKA[cid])
+        if t:
+            q = t["quotes"]
+            out.append({"sym": sym, "ikon": ikon, "usd": q["USD"]["price"], "try": q.get("TRY", {}).get("price"), "eur": q.get("EUR", {}).get("price"),
+                        "degisim": round(q["USD"].get("percent_change_24h") or 0, 2)})
+    return {"coinler": out, "zaman": time.strftime("%H:%M"), "kaynak": "CoinPaprika"}
+
+
+def kripto():
+    try:
+        d = kripto_gecko()
+    except Exception:
+        d = kripto_paprika()
+    b = next((c for c in d["coinler"] if c["sym"] == "BTC"), None)
+    if b and b.get("usd") and b.get("try"):
+        d["usdtry"] = round(b["try"] / b["usd"], 2)
+        if b.get("eur"):
+            d["eurtry"] = round(b["try"] / b["eur"], 2)
+    return d
+
+
+def kripto_gecko():
+    ids = ",".join(c[0] for c in COINS)
+    url = ("https://api.coingecko.com/api/v3/simple/price?ids=%s&vs_currencies=usd,try,eur"
+           "&include_24hr_change=true" % ids)
+    req = urllib.request.Request(url, headers={"User-Agent": "flugel-panel/1.0"})
+    d = json.load(urllib.request.urlopen(req, timeout=10))
+    out = []
+    for cid, sym, ikon in COINS:
+        if cid in d:
+            v = d[cid]
+            out.append({"sym": sym, "ikon": ikon, "usd": v.get("usd"), "try": v.get("try"), "eur": v.get("eur"),
+                        "degisim": round(v.get("usd_24h_change") or 0, 2)})
+    return {"coinler": out, "zaman": time.strftime("%H:%M"), "kaynak": "CoinGecko"}
+
+
+def canli():
+    """Anlik fiyatlar (Yahoo Finance, birkac saniye gecikmeli): BTC, ETH, USD/TRY, EUR/TRY."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def al(cift):
+        anahtar, sembol = cift
+        try:
+            req = urllib.request.Request(f"https://query1.finance.yahoo.com/v8/finance/chart/{sembol}?range=1d&interval=1m",
+                                         headers={"User-Agent": "Mozilla/5.0"})
+            m = json.load(urllib.request.urlopen(req, timeout=8))["chart"]["result"][0]["meta"]
+            p, o = m["regularMarketPrice"], (m.get("chartPreviousClose") or m.get("previousClose"))
+            return anahtar, {"fiyat": p, "degisim": round((p - o) / o * 100, 2) if o else 0}
+        except Exception:
+            return anahtar, None
+    with ThreadPoolExecutor(4) as h:
+        out = {k: v for k, v in h.map(al, (("btc", "BTC-USD"), ("eth", "ETH-USD"), ("usdtry", "USDTRY=X"), ("eurtry", "EURTRY=X"))) if v}
+    if "btc" not in out:  # Yahoo da kapaliysa genel kripto verisine dus
+        k = cached("kripto", 110, kripto)
+        for c in k.get("coinler", []):
+            if c["sym"] in ("BTC", "ETH"):
+                out[c["sym"].lower()] = {"fiyat": c["usd"], "degisim": c["degisim"]}
+        for a in ("usdtry", "eurtry"):
+            if k.get(a):
+                out[a] = {"fiyat": k[a], "degisim": None}
+    out["zaman"] = time.strftime("%H:%M:%S")
+    if "btc" not in out:
+        raise RuntimeError("fiyat alinamadi")
+    return out
+
+
+def sh(cmd):
+    return subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=8).stdout.strip()
+
+
+def pc():
+    def oku(p, d=""):
+        try:
+            return open(p).read().strip()
+        except OSError:
+            return d
+    cpu1 = [int(x) for x in oku("/proc/stat").split("\n")[0].split()[1:]]
+    time.sleep(0.4)
+    cpu2 = [int(x) for x in oku("/proc/stat").split("\n")[0].split()[1:]]
+    top = sum(cpu2) - sum(cpu1); bos = (cpu2[3] + cpu2[4]) - (cpu1[3] + cpu1[4])
+    mem = {l.split(":")[0]: int(l.split()[1]) for l in oku("/proc/meminfo").split("\n") if l}
+    st = os.statvfs("/")
+    temp = sh("sensors 2>/dev/null | awk '/Package id 0/{gsub(/[+°C]/,\"\",$4); print int($4); exit}'")
+    gpu = sh("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader 2>/dev/null")
+    bat = oku("/sys/class/power_supply/BAT0/capacity", "?")
+    bdurum = {"Charging": "şarj oluyor", "Discharging": "pilde", "Full": "dolu",
+              "Not charging": "prizde"}.get(oku("/sys/class/power_supply/BAT0/status"), "")
+    kalan = sh("upower -i /org/freedesktop/UPower/devices/battery_BAT0 | awk -F: '/time to (empty|full)/{gsub(/^ +/,\"\",$2); print $2}'")
+    wifi = sh("nmcli -t -f active,ssid dev wifi 2>/dev/null | awk -F: '$1==\"yes\"{print $2; exit}'")
+    ts = sh("tailscale status --json 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin).get(\"BackendState\",\"\"))'")
+    return {"cpu": round(100 * (top - bos) / max(top, 1)),
+            "ram": "%.1f/%.0f GB" % ((mem["MemTotal"] - mem["MemAvailable"]) / 1048576, mem["MemTotal"] / 1048576),
+            "ram_kul": round((mem["MemTotal"] - mem["MemAvailable"]) / 1048576, 1), "ram_top": round(mem["MemTotal"] / 1048576),
+            "disk": "%d%%" % round(100 * (1 - st.f_bavail / st.f_blocks)),
+            "temp": temp, "gpu": gpu, "pil": bat, "pil_durum": bdurum, "pil_kalan": kalan,
+            "wifi": wifi, "tailscale": ts, "uptime": sh("uptime -p").replace("up ", "")}
+
+
+UZAK = r'''
+import json, os, subprocess, time
+def sh(c):
+    try: return subprocess.run(c, shell=True, capture_output=True, text=True, timeout=8).stdout.strip()
+    except Exception: return ""
+def oku(p, d=""):
+    try: return open(os.path.expanduser(p)).read().strip()
+    except OSError: return d
+c1 = [int(x) for x in oku("/proc/stat").split("\n")[0].split()[1:]]; time.sleep(0.5)
+c2 = [int(x) for x in oku("/proc/stat").split("\n")[0].split()[1:]]
+t = sum(c2) - sum(c1); b = (c2[3] + c2[4]) - (c1[3] + c1[4])
+m = {l.split(":")[0]: int(l.split()[1]) for l in oku("/proc/meminfo").split("\n") if l}
+dur = oku("~/sistem-bakim/durum/.durum", "?").split("\n")
+disk = {}
+for mp in ("/", "/mnt/side", "/mnt/sidemain"):
+    try:
+        s = os.statvfs(mp); disk[mp] = round(100 * (1 - s.f_bavail / s.f_blocks))
+    except OSError: disk[mp] = None
+g = sh("nvidia-smi --query-gpu=temperature.gpu,power.draw,utilization.gpu --format=csv,noheader,nounits").split(", ")
+print(json.dumps({
+    "durum": dur[0] or "?", "sorunlar": "; ".join(x for x in dur[1:4] if x),
+    "cpu": round(100 * (t - b) / max(t, 1)),
+    "temp": sh("sensors 2>/dev/null | awk '/Tctl|Tdie/{gsub(/[+°C]/,\"\",$2); print int($2); exit}'"),
+    "ram_kul": round((m["MemTotal"] - m["MemAvailable"]) / 1048576, 1), "ram_top": round(m["MemTotal"] / 1048576),
+    "swap": round((m["SwapTotal"] - m["SwapFree"]) / 1048576, 1),
+    "yuk": oku("/proc/loadavg").split()[0], "uptime": sh("uptime -p").replace("up ", ""),
+    "disk": disk,
+    "gpu_temp": g[0] if g and g[0] else "", "gpu_w": g[1] if len(g) > 1 else "", "gpu_kul": g[2] if len(g) > 2 else "",
+    "konteyner": sh("echo $(docker ps -q | wc -l)/$(docker ps -aq | wc -l)"),
+    "vpn": sh("docker inspect -f '{{.State.Health.Status}}' gluetun"),
+    "yedek": oku("/var/lib/sistem-bakim/son-kritik-yedek", "-"),
+    "vm": sh("virsh -c qemu:///system list --name 2>/dev/null | grep -c .")}))
+'''
+
+
+def sunucu():
+    r = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", "-o", "ControlPath=none",
+                        "flugelserver", "python3", "-"], input=UZAK, capture_output=True, text=True, timeout=25)
+    if r.returncode != 0 or not r.stdout.strip():
+        raise RuntimeError("sunucuya ulasilamadi")
+    return json.loads(r.stdout)
+
+
+YEDEK = os.path.expanduser("~/.local/share/flugel-bot/durum")
+
+
+def sunucu_ya_da_yedek(dosya):
+    """Once sunucudaki guncel veri; sunucu kapaliysa bu PC'deki yedek botun verisi."""
+    r = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5", "-o", "ControlPath=none",
+                        "flugelserver", "cat", "/var/lib/basket-bot/" + dosya], capture_output=True, text=True, timeout=15)
+    if r.returncode == 0 and r.stdout.strip():
+        return json.loads(r.stdout), False
+    return json.load(open(os.path.join(YEDEK, dosya))), True
+
+
+def basket():
+    d, yedek = sunucu_ya_da_yedek("maclar.json")
+    return {"gelecek": d.get("gelecek", [])[:10], "guncelleme": d.get("guncelleme"),
+            "taranan": len(d.get("taranan", [])), "isimler": d.get("isimler", []), "hatalar": len(d.get("hatalar", [])),
+            "yedek": yedek}
+
+
+def anime():
+    d, yedek = sunucu_ya_da_yedek("anime.json")
+    return {"anime": d.get("anime", []), "manga": d.get("manga", []), "trend": d.get("trend", []),
+            "guncelleme": d.get("guncelleme"), "yedek": yedek}
+
+
+if __name__ == "__main__":
+    ne = sys.argv[1] if len(sys.argv) > 1 else "pc"
+    if ne == "kripto":
+        print(json.dumps(cached("kripto", 110, kripto)))
+    elif ne == "canli":
+        print(json.dumps(cached("canli", 20, canli)))
+    elif ne == "anime":
+        print(json.dumps(cached("anime", 600, anime)))
+    elif ne == "basket":
+        print(json.dumps(cached("basket", 280, basket)))
+    elif ne == "sunucu":
+        print(json.dumps(cached("sunucu", 50, sunucu)))
+    else:
+        print(json.dumps(pc()))

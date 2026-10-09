@@ -1,0 +1,7 @@
+[Unit]
+Description=AI gozcu her 15 dakika
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=15min
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Docker portlarini sadece ev agi ve Tailscale'e ac
+After=docker.service
+Requires=docker.service
+PartOf=docker.service
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/docker-guvenlik-duvari.sh
+[Install]
+WantedBy=docker.service

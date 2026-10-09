@@ -1,0 +1,9 @@
+[Unit]
+Description=Her 5 dakikada Docker kontrolu
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target

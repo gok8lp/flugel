@@ -1,0 +1,8 @@
+[Unit]
+Description=Anime takip her saat
+[Timer]
+OnBootSec=3min
+OnCalendar=*-*-* *:05:00
+Persistent=true
+[Install]
+WantedBy=timers.target

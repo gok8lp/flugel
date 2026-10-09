@@ -1,0 +1,8 @@
+[Unit]
+Description=AI gozcu - sunucu saglik kontrolu
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ai-gozcu.sh
+Nice=10
+TimeoutStartSec=20min

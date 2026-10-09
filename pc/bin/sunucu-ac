@@ -1,0 +1,5 @@
+#!/bin/bash
+# Kullanim: sunucu-ac <sema> <port> [yol]  -> evdeyse LAN IP, degilse Tailscale adi ile Chrome uygulama penceresinde acar
+S=$1; P=$2; Y=${3:-/}
+if timeout 1 bash -c "</dev/tcp/192.168.0.15/$P" 2>/dev/null; then H=192.168.0.15; else H=flugelserver.tail42f1f4.ts.net; fi
+exec google-chrome --app="$S://$H:$P$Y" --class="sunucu-$P"

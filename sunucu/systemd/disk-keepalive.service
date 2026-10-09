@@ -1,0 +1,14 @@
+[Unit]
+Description=Disk sdc keep-alive (park onleme)
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/disk-keepalive.sh
+Restart=always
+RestartSec=10
+Nice=19
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=multi-user.target

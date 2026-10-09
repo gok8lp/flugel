@@ -1,0 +1,7 @@
+[Unit]
+Description=Kritik yedek her gece 04:30
+[Timer]
+OnCalendar=*-*-* 04:30
+Persistent=true
+[Install]
+WantedBy=timers.target

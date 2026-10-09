@@ -1,0 +1,60 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "192.168.0.15:3010,100.86.88.1:3010,flugelserver.tail42f1f4.ts.net:3010,localhost:3010"
+    volumes:
+      - ./homepage:/app/config
+      - ./homepage/fontlar:/app/public/fontlar:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /mnt/side:/mnt/side:ro
+      - /mnt/sidemain:/mnt/sidemain:ro
+    ports: ["3010:3000"]
+    mem_limit: 384m
+
+  # Gundem botu (sistem-bakim): haber/mac/anime/sunucu sorunlari -> JSON + iCal, sadece ic agda (:8090)
+  gundem-botu:
+    image: python:3.13-alpine
+    container_name: gundem-botu
+    ports: ["3011:8090"]   # /durum sayfasi + takvim.ics (ic ag / Tailscale)
+    restart: unless-stopped
+    user: "1000:1000"
+    working_dir: /app
+    command: ["python", "-u", "/app/gundem_botu.py"]
+    environment:
+      TZ: Europe/Istanbul
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - ./gundem/gundem_botu.py:/app/gundem_botu.py:ro
+      - ./gundem/veri:/veri
+      - /home/flugel/sistem-bakim/durum:/durum:ro
+      - /var/lib/basket-bot:/basket:ro
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen(\"http://127.0.0.1:8090/ozet.json\",timeout=5)"]
+      interval: 60s
+      start_period: 120s
+
+  # FLUGEL Akis (sistem-bakim): kisisel sosyal akis uygulamasi -> http://192.168.0.15:3012
+  flugel-akis:
+    image: python:3.13-alpine
+    container_name: flugel-akis
+    restart: unless-stopped
+    user: "1000:1000"
+    working_dir: /app
+    command: ["python", "-u", "/app/akis.py"]
+    environment:
+      TZ: Europe/Istanbul
+      PYTHONDONTWRITEBYTECODE: "1"
+    ports: ["3012:8091"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - ./akis/akis.py:/app/akis.py:ro
+      - ./akis/web:/app/web:ro
+      - ./akis/veri:/veri
+      - /var/lib/basket-bot:/basket:ro
+      - /home/flugel/sistem-bakim/durum:/durum:ro
+      - ./homepage/services.yaml:/homepage/services.yaml:ro
+    mem_limit: 512m

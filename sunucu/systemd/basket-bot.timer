@@ -1,0 +1,8 @@
+[Unit]
+Description=Basketbol botu her saat basi
+[Timer]
+OnBootSec=2min
+OnCalendar=*-*-* *:00:00
+Persistent=true
+[Install]
+WantedBy=timers.target

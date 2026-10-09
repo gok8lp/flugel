@@ -1,0 +1,9 @@
+[Unit]
+Description=Haftalik disk saglik raporu
+
+[Timer]
+OnCalendar=Sun 10:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

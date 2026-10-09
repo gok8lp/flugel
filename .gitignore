@@ -1,0 +1,13 @@
+# gizli/uretilen dosyalar asla depoya girmez
+android/anahtar/
+android/bin/
+android/gen/
+android/obj/
+*.jks
+*.keystore
+*.apk
+*.env
+secrets*
+__pycache__/
+*.pyc
+*.onceki*

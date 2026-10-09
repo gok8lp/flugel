@@ -1,0 +1,46 @@
+#!/bin/bash
+# w11-gpu — sunucudaki GPU'lu Windows VM'i (W11-GPU) ac / kapat / durum, Moonlight ile baglan (sistem-bakim)
+#   w11-gpu baslat   -> VM'i acar, Apollo hazir olunca Moonlight'i masaustune baglar
+#   w11-gpu kapat    -> Windows'u duzgunce kapatir (ACPI). ASLA zorla kapatmaz.
+#   w11-gpu durum    -> kapali | aciliyor | hazir   (ust cubuk okur)
+LAN=192.168.0.15; TS=100.86.88.1
+adres(){ timeout 2 bash -c "</dev/tcp/$LAN/22" 2>/dev/null && echo $LAN || echo $TS; }
+vm(){ ssh -o ConnectTimeout=8 flugelserver "virsh -c qemu:///system $*" 2>/dev/null; }
+apollo_hazir(){ timeout 3 bash -c "</dev/tcp/$1/47989" 2>/dev/null; }
+bildir(){ notify-send -i computer "Windows (GPU)" "$1" 2>/dev/null; echo "$1"; }
+
+durum(){
+  local s; s=$(vm domstate W11-GPU | head -1)
+  if [ "$s" != "running" ]; then echo kapali; return; fi
+  apollo_hazir "$(adres)" && echo hazir || echo aciliyor
+}
+
+case "${1:-durum}" in
+  durum) durum ;;
+  baslat)
+    H=$(adres)
+    if [ "$(vm domstate W11-GPU | head -1)" != running ]; then
+      if [ "$(vm domstate W11 | head -1)" = running ]; then
+        bildir "GPU'suz W11 acik (ayni disk). Once onu kapatiyorum..."
+        vm shutdown W11 >/dev/null
+        for i in $(seq 1 60); do [ "$(vm domstate W11 | head -1)" = "shut off" ] && break; sleep 5; done
+      fi
+      bildir "Sunucuda Windows aciliyor (Jellyfin/Plex bu sirada durur)..."
+      vm start W11-GPU >/dev/null || { bildir "VM baslatilamadi — sunucuda: virsh start W11-GPU"; exit 1; }
+    fi
+    for i in $(seq 1 90); do apollo_hazir "$H" && break; sleep 4; done
+    apollo_hazir "$H" || { bildir "Windows 6 dakikada hazir olmadi (guncelleme yapiyor olabilir). Sonra tekrar dene."; exit 1; }
+    bildir "Windows hazir, baglaniyor..."
+    # evde (LAN, 5 GHz Wi-Fi): ekranin kendi cozunurlugu + yuksek bit hizi; disarida (Tailscale): ev upload'una gore dusuk
+    if [ "$H" = "$LAN" ]; then
+      KALITE=(--resolution 2560x1600 --fps 60 --bitrate 50000)
+    else
+      KALITE=(--1080 --fps 60 --bitrate 15000)
+    fi
+    exec flatpak run com.moonlight_stream.Moonlight stream "$H" "Desktop" "${KALITE[@]}" \
+      --display-mode borderless --no-vsync --frame-pacing --game-optimization --keep-awake
+    ;;
+  kapat)
+    vm shutdown W11-GPU >/dev/null && bildir "Windows kapatiliyor (guncelleme varsa birkac dakika surebilir)..." ;;
+  *) echo "kullanim: w11-gpu baslat|kapat|durum"; exit 1 ;;
+esac

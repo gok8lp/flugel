@@ -1,0 +1,27 @@
+- Takip:
+    - MyAnimeList:
+        - {abbr: MA, href: "https://myanimelist.net/profile/gokalpgoksu"}
+    - AniList yayın takvimi:
+        - {abbr: AL, href: "https://anilist.co/airing"}
+    - Basketbol fikstürü:
+        - {abbr: AB, href: "https://www.ankarabasket.org.tr/fiksturler"}
+- Gunluk:
+    - Gmail:
+        - {abbr: GM, href: "https://mail.google.com"}
+    - Google Takvim:
+        - {abbr: GT, href: "https://calendar.google.com"}
+    - Drive:
+        - {abbr: DR, href: "https://drive.google.com"}
+    - Telegram Web:
+        - {abbr: TG, href: "https://web.telegram.org"}
+    - YouTube:
+        - {abbr: YT, href: "https://youtube.com"}
+    - GitHub:
+        - {abbr: GH, href: "https://github.com"}
+- Hesaplar:
+    - Tailscale:
+        - {abbr: TS, href: "https://login.tailscale.com/admin/machines"}
+    - Cloudflare:
+        - {abbr: CF, href: "https://dash.cloudflare.com"}
+    - Modem:
+        - {abbr: RT, href: "http://192.168.0.1"}

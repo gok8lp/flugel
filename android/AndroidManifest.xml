@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FLUGEL Android (sistem-bakim): tek izin INTERNET; servis/alici/izleme YOK. Sadece Tailscale'deki FLUGEL Akis'i acar. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.flugel.akis" android:versionCode="1" android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="34" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application android:label="FLUGEL" android:icon="@mipmap/ikon" android:allowBackup="false"
+        android:usesCleartextTraffic="false" android:theme="@android:style/Theme.Material.NoActionBar"
+        android:hardwareAccelerated="true">
+        <activity android:name=".Ana" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden|uiMode"
+            android:launchMode="singleTask" android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

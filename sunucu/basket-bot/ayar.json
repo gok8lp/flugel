@@ -1,0 +1,5 @@
+{
+  "_aciklama": "Bultenlerde aranacak isimler (buyuk/kucuk harf ve Turkce karakter fark etmez). Takim maclarini da takip etmek icin 'takimlar' listesine takim adini yazin.",
+  "isimler": ["Ahmet Gökalp Göksu", "Gökalp Göksu"],
+  "takimlar": []
+}

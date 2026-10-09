@@ -1,0 +1,8 @@
+[Unit]
+Description=Ankara Basketbol fikstur botu (mac atamalarini takip eder)
+After=network-online.target
+[Service]
+Type=oneshot
+User=flugel
+ExecStart=/usr/bin/python3 /opt/basket-bot/basket_bot.py
+TimeoutStartSec=5min

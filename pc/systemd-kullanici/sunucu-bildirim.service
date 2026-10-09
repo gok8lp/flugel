@@ -1,0 +1,5 @@
+[Unit]
+Description=Sunucu bildirimlerini masaustunde goster
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/sunucu-bildirim-izle

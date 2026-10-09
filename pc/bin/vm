@@ -1,0 +1,36 @@
+#!/bin/bash
+# vm — sunucudaki sanal makineler (sistem-bakim)
+#   vm liste            -> JSON: [{"ad","etiket","durum"}]  (ust cubuk okur)
+#   vm baslat AD        -> acar (W11 <-> W11-GPU ayni disk: digeri aciksa once duzgunce kapatir)
+#   vm baglan AD        -> W11-GPU: Moonlight (w11-gpu) · digerleri: ekran konsolu (virt-manager, ssh tuneli)
+#   vm kapat AD         -> duzgun kapatma (ACPI). ASLA zorla kapatmaz.
+URI=qemu+ssh://flugelserver/system
+v(){ ssh -o ConnectTimeout=8 flugelserver "virsh -c qemu:///system $*" 2>/dev/null; }
+bildir(){ notify-send -i computer "Sanal makine" "$1" 2>/dev/null; echo "$1"; }
+etiket(){ case "$1" in W11-GPU) echo "Windows (GPU)";; W11) echo "Windows (GPU'suz)";; mullvad-ts) echo "Ubuntu (Mullvad + Tailscale)";; *) echo "$1";; esac; }
+esi(){ case "$1" in W11) echo W11-GPU;; W11-GPU) echo W11;; esac; }
+
+case "$1" in
+  liste)
+    v list --all | awk 'NR>2 && NF{st=$3; for(i=4;i<=NF;i++) st=st" "$i; print $2"|"st}' | while IFS='|' read -r ad st; do
+      printf '{"ad":"%s","etiket":"%s","durum":"%s"}\n' "$ad" "$(etiket "$ad")" "$st"
+    done | python3 -c 'import sys,json; print(json.dumps([json.loads(l) for l in sys.stdin]))'
+    ;;
+  baslat)
+    [ "$2" = W11-GPU ] && exec ~/.local/bin/w11-gpu baslat
+    d=$(esi "$2")
+    if [ -n "$d" ] && [ "$(v domstate $d | head -1)" = running ]; then
+      bildir "$(etiket $d) acik (ayni disk), once duzgunce kapatiyorum..."; v shutdown $d >/dev/null
+      for i in $(seq 1 60); do [ "$(v domstate $d | head -1)" = "shut off" ] && break; sleep 5; done
+    fi
+    v start "$2" >/dev/null && bildir "$(etiket $2) aciliyor..." || bildir "$(etiket $2) acilamadi"
+    sleep 3; exec "$0" baglan "$2"
+    ;;
+  baglan)
+    [ "$2" = W11-GPU ] && exec ~/.local/bin/w11-gpu baslat
+    exec virt-manager --connect "$URI" --show-domain-console "$2"
+    ;;
+  kapat)
+    v shutdown "$2" >/dev/null && bildir "$(etiket $2) kapatiliyor..." ;;
+  *) echo "kullanim: vm liste | baslat AD | baglan AD | kapat AD"; exit 1 ;;
+esac

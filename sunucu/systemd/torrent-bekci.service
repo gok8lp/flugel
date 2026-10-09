@@ -1,0 +1,7 @@
+[Unit]
+Description=Torrent icerik bekcisi (yasakli icerik filtresi)
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/torrent-bekci.sh
+Nice=10

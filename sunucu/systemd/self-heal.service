@@ -1,0 +1,5 @@
+[Unit]
+Description=Self-heal: servis/container/disk/ag otomatik onarim
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/self-heal.sh

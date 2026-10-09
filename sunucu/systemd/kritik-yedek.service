@@ -1,0 +1,9 @@
+[Unit]
+Description=Kritik veri yedegi (fotograf, Nextcloud, ayarlar) -> ikinci disk
+RequiresMountsFor=/mnt/side /mnt/sidemain
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/kritik-yedek.sh
+Nice=15
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

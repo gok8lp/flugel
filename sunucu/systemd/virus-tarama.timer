@@ -1,0 +1,7 @@
+[Unit]
+Description=Virus taramasi her Carsamba 02:00
+[Timer]
+OnCalendar=Wed *-*-* 02:00
+Persistent=true
+[Install]
+WantedBy=timers.target

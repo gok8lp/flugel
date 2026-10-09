@@ -1,0 +1,5 @@
+[Unit]
+Description=Olum oncesi disk koruyucu
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/disk-koruyucu.sh

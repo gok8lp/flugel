@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=FLUGEL
+Comment=Kişisel akış: oyun, teknoloji, anime, YouTube, maçlar, AI
+Exec=/home/flugel/.local/bin/flugel-akis
+Icon=flugel-akis
+Terminal=false
+Type=Application
+Categories=Network;News;
+StartupWMClass=FlugelAkis

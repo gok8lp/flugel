@@ -1,0 +1,8 @@
+{
+  "uuid": "flugel-kilit@flugel",
+  "name": "Flugel Kilit Ekrani",
+  "description": "Kilit ekraninda saatin altinda siyah-beyaz widgetlar: kripto, siradaki anime, pil, sunucu, Re:Zero (sistem-bakim)",
+  "shell-version": ["48", "49", "50"],
+  "session-modes": ["user", "unlock-dialog"],
+  "version": 1
+}

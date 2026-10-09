@@ -1,0 +1,11 @@
+#!/bin/bash
+# Sunucudaki yeni bildirimleri masaustu bildirimi olarak gosterir (sistem-bakim)
+SON=~/.cache/sistem-bakim/son-bildirim-satiri
+yeni=$(ssh -o BatchMode=yes -o ConnectTimeout=8 flugelserver 'cat ~/sistem-bakim/durum/bildirimler.log 2>/dev/null' ) || exit 0
+n=$(printf '%s\n' "$yeni" | grep -c .); s=$(cat $SON 2>/dev/null || echo 0)
+[ "$n" -lt "$s" ] && s=0
+printf '%s\n' "$yeni" | grep . | tail -n +$((s+1)) | tail -5 | while IFS='|' read -r ts sev msg; do
+  case $sev in KRITIK) u=critical;; UYARI) u=normal;; *) u=low;; esac
+  notify-send -u $u -a "flugelserver" -i network-server "Sunucu: $sev" "$msg"
+done
+echo "$n" > $SON

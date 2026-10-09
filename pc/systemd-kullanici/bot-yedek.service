@@ -1,0 +1,6 @@
+[Unit]
+Description=Basketbol + anime botu yedegi (sunucu kapaliyken bu PC devralir)
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/bot-yedek
+TimeoutStartSec=5min

@@ -1,0 +1,8 @@
+[Unit]
+Description=Bot yedegi her saat (sunucudan 30 dk kaydirmali)
+[Timer]
+OnStartupSec=2min
+OnCalendar=*-*-* *:30:00
+Persistent=true
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,99 @@
+/* FLUGEL paneli — acik grafit tema, animasyonlu, telefona uyumlu (sistem-bakim) */
+@font-face { font-family: "Cinzel"; src: url("/fontlar/Cinzel.ttf") format("truetype"); font-display: swap; }
+:root { --vurgu: 199 210 254; --vurgu2: 226 232 240; --kart: rgba(255, 255, 255, .085); --kenar: rgba(255, 255, 255, .15); }
+
+body { background: transparent !important; color: #f1f3f7; }
+#page_container, #inner_wrapper { background: transparent !important; }
+
+/* arka plan: yumusak, acik renkli dalgalanan isik */
+body::before {
+  content: ""; position: fixed; inset: -25%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(36% 30% at 15% 18%, rgba(199, 210, 254, .16), transparent 62%),
+    radial-gradient(32% 28% at 85% 12%, rgba(255, 255, 255, .10), transparent 62%),
+    radial-gradient(40% 36% at 60% 92%, rgba(165, 180, 252, .10), transparent 62%);
+  filter: blur(40px); animation: aurora 30s ease-in-out infinite alternate;
+}
+@keyframes aurora { 0% { transform: translate3d(0,0,0) rotate(0); } 50% { transform: translate3d(3%,-2%,0) rotate(7deg); } 100% { transform: translate3d(-3%,2%,0) rotate(-6deg); } }
+
+/* FLUGEL basligi (greeting widget'i) */
+.information-widget-greeting span, .information-widget-greeting {
+  font-family: "Cinzel", serif !important; font-weight: 600 !important; letter-spacing: .32em;
+  background: linear-gradient(100deg, #ffffff 0%, #c7d2fe 35%, #ffffff 55%, #e2e8f0 100%); background-size: 220% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent !important;
+  animation: parilti 7s ease-in-out infinite; text-shadow: none;
+}
+@keyframes parilti { 0%, 100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
+
+/* sekmeler */
+#myTab, ul[role="tablist"] { gap: 6px; }
+button[role="tab"] { border-radius: 999px !important; padding: 6px 16px !important; transition: background .25s, color .25s; }
+button[role="tab"][aria-selected="true"] { background: rgba(255, 255, 255, .16) !important; color: #fff !important; }
+
+/* kartlar sirayla belirir (--i custom.js'ten) */
+.service { opacity: 0; animation: belir .6s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--i, 0) * 40ms); }
+@keyframes belir { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* cam kart */
+.service-card {
+  background: var(--kart) !important; border: 1px solid var(--kenar); border-radius: 16px !important;
+  backdrop-filter: blur(12px); box-shadow: 0 6px 22px -12px rgba(0, 0, 0, .45);
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s, border-color .28s, background .28s !important;
+}
+.service-card:hover { transform: translateY(-3px); background: rgba(255, 255, 255, .12) !important; border-color: rgba(var(--vurgu), .45);
+  box-shadow: 0 16px 34px -16px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(var(--vurgu), .15); }
+.service-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
+  background: radial-gradient(170px circle at var(--mx, 50%) var(--my, 50%), rgba(var(--vurgu), .14), transparent 70%); }
+.service-card:hover::before { opacity: 1; }
+.service-card::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .10) 50%, transparent 70%); transform: translateX(-120%); transition: transform .9s ease; }
+.service-card:hover::after { transform: translateX(120%); }
+.service-name { font-weight: 600; letter-spacing: .01em; }
+.service-description { opacity: .75; }
+.service-icon img { transition: transform .4s cubic-bezier(.2,.8,.2,1); filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .35)); }
+.service-card:hover .service-icon img { transform: scale(1.12) rotate(-5deg); }
+
+/* haber / mac listeleri (customapi dynamic-list) */
+.service-card a[href] div, .service-card .service-block { transition: background .2s; }
+.service-container a.flex, .service-card .flex.flex-row.text-xs { border-radius: 8px; }
+.service-card a:hover > div { background: rgba(255, 255, 255, .10) !important; }
+
+/* grup basliklari: canli alt cizgi */
+.service-group-name, .bookmark-group-name { letter-spacing: .12em; text-transform: uppercase; font-size: .78rem !important; opacity: .9; }
+.service-group-name::after { content: ""; display: block; height: 2px; width: 34px; margin-top: 6px; border-radius: 2px;
+  background: linear-gradient(90deg, rgb(var(--vurgu)), rgb(var(--vurgu2)), transparent); animation: cizgi 3.2s ease-in-out infinite alternate; }
+@keyframes cizgi { to { width: 96px; } }
+
+/* durum noktasi nabzi */
+[class*="docker-status-"] { position: relative; padding-left: 14px !important; }
+[class*="docker-status-"]::before { content: ""; position: absolute; left: 4px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%;
+  background: #a7f3d0; animation: nabiz 2.2s ease-out infinite; }
+@keyframes nabiz { 0% { box-shadow: 0 0 0 0 rgba(167, 243, 208, .55); } 70% { box-shadow: 0 0 0 7px rgba(167, 243, 208, 0); } 100% { box-shadow: 0 0 0 0 rgba(167, 243, 208, 0); } }
+
+/* yer imleri */
+.bookmark-icon { transition: transform .25s; }
+li:hover .bookmark-icon { transform: scale(1.08); }
+
+/* ---- telefon ---- */
+@media (max-width: 640px) {
+  body::before { display: none; }
+  .service { animation-duration: .35s; animation-delay: calc(var(--i, 0) * 15ms); }
+  #information-widgets { flex-wrap: wrap; gap: 6px; }
+  #information-widgets > div { flex: 1 1 45%; }
+  .information-widget-resource, .information-widget-resources { display: none !important; }        /* telefonda kalabalik yapmasin */
+  .information-widget-greeting span, .information-widget-greeting { letter-spacing: .2em; }
+  ul[role="tablist"] { flex-direction: row !important; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  ul[role="tablist"] > li { flex: 1 1 0; }
+  .service-card { border-radius: 14px !important; }
+  .service-card:hover { transform: none; }
+  .service-card::after { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } .service { opacity: 1; } }
+
+/* acik grafit palet: Homepage tema degiskenlerini ezer (koyu lacivert yerine) */
+html.theme-slate, html.dark.theme-slate {
+  --color-500: 128 138 156; --color-600: 98 107 124; --color-700: 78 86 102;
+  --color-800: 58 64 78; --color-900: 46 51 62; --bg-color: 58 64 78;
+  background: linear-gradient(165deg, #4a5263 0%, #3a404d 45%, #2f343f 100%) fixed !important;
+}
+#page_wrapper, #__next, main { background: transparent !important; }

@@ -1,0 +1,7 @@
+[Unit]
+Description=Sunucu bildirimleri her 3 dakika
+[Timer]
+OnStartupSec=1min
+OnUnitActiveSec=3min
+[Install]
+WantedBy=timers.target

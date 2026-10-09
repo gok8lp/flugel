@@ -1,0 +1,7 @@
+{
+  "uuid": "flugel-panel@flugel",
+  "name": "Flugel Panel",
+  "description": "Ust cubukta kripto fiyatlari, bu PC + sunucu durumu ve gunluk kisayollar (sistem-bakim)",
+  "shell-version": ["48", "49", "50"],
+  "version": 1
+}

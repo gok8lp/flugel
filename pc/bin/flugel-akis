@@ -1,0 +1,5 @@
+#!/bin/bash
+# FLUGEL Akis'i ayri pencerede uygulama gibi ac — Tailscale HTTPS (bildirimler calisir); Tailscale kapaliysa ev agi — sistem-bakim
+U="https://flugelserver.tail42f1f4.ts.net:8443/#/ana"
+timeout 3 bash -c "</dev/tcp/flugelserver.tail42f1f4.ts.net/8443" 2>/dev/null || U="http://192.168.0.15:3012/#/ana"
+exec google-chrome --app="$U" --class=FlugelAkis --user-data-dir="$HOME/.config/flugel-akis-chrome" "$@"

@@ -1,0 +1,42 @@
+#!/bin/bash
+# libvirt qemu hook - GPU passthrough SADECE ekran kartini (29:00.x) kullanan VM'lerde calisir.
+# Once GPU kullanan konteynerleri durdurur, sonra karti vfio-pci'ye verir; VM kapaninca geri alir.
+# (sistem-bakim: eski hali ~/sistem-bakim/libvirt-hook-qemu.onceki)
+VM="$1"; ACTION="$2"; SUB="$3"
+GPU="0000:29:00.0"; GPU_ID="10de 2182"
+GPU_KONTEYNERLER="ollama jellyfin plex immich_machine_learning subgen"
+LOG=/var/log/libvirt/gpu-hook.log
+XML=$(cat)   # libvirt alan XML'ini stdin'den verir
+# W11 ve W11-GPU ayni diski kullanir: ikisi ayni anda acilamaz
+if [ "$ACTION" = "prepare" ] && [ "$SUB" = "begin" ]; then
+  case "$VM" in W11) DIGER=W11-GPU;; W11-GPU) DIGER=W11;; *) DIGER="";; esac
+  if [ -n "$DIGER" ] && [ -e "/run/libvirt/qemu/$DIGER.pid" ]; then echo "$(date '+%F %T') $VM: $DIGER zaten acik, baslatma reddedildi" >> /var/log/libvirt/gpu-hook.log; exit 1; fi
+fi
+# Moonlight/Apollo port yonlendirme (W11 -> .51, W11-GPU -> .50)
+case "$VM" in W11) VMIP=192.168.122.51;; W11-GPU) VMIP=192.168.122.50;; *) VMIP="";; esac
+if [ -n "$VMIP" ]; then
+  [ "$ACTION" = "started" ] && [ "$SUB" = "begin" ] && /usr/local/sbin/vm-yonlendir.sh ekle $VMIP
+  [ "$ACTION" = "release" ] && [ "$SUB" = "end" ] && /usr/local/sbin/vm-yonlendir.sh sil $VMIP
+fi
+echo "$XML" | grep -q "bus='0x29'" || exit 0   # GPU kullanmayan VM: hicbir sey yapma
+log(){ echo "$(date '+%F %T') $VM $ACTION/$SUB: $*" >> $LOG; }
+if [ "$ACTION" = "prepare" ] && [ "$SUB" = "begin" ]; then
+    log "GPU konteynerleri durduruluyor"
+    for c in $GPU_KONTEYNERLER; do timeout 60 docker stop "$c" >/dev/null 2>&1 && echo "$c" >> /run/gpu-hook-durdurulan; done
+    if command -v fuser >/dev/null && timeout 5 fuser -s /dev/nvidia* 2>/dev/null; then
+        log "HATA: GPU hala kullanimda, VM baslatilmayacak"; exit 1
+    fi
+    modprobe vfio-pci
+    timeout 30 sh -c "echo $GPU > /sys/bus/pci/drivers/nvidia/unbind" 2>/dev/null || { log "HATA: nvidia unbind zaman asimi"; exit 1; }
+    echo "$GPU_ID" > /sys/bus/pci/drivers/vfio-pci/new_id 2>/dev/null || true
+    echo "$GPU" > /sys/bus/pci/drivers/vfio-pci/bind 2>/dev/null || true
+    log "GPU vfio-pci'ye verildi"
+fi
+if [ "$ACTION" = "release" ] && [ "$SUB" = "end" ]; then
+    echo "$GPU" > /sys/bus/pci/drivers/vfio-pci/unbind 2>/dev/null || true
+    echo "$GPU" > /sys/bus/pci/drivers/nvidia/bind 2>/dev/null || true
+    log "GPU nvidia'ya geri verildi"
+    [ -f /run/gpu-hook-durdurulan ] && for c in $(cat /run/gpu-hook-durdurulan); do docker start "$c" >/dev/null 2>&1; done; rm -f /run/gpu-hook-durdurulan
+    log "GPU konteynerleri yeniden baslatildi"
+fi
+exit 0

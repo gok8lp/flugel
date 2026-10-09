@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=flugel
+Description=FLUGEL — siyah zemin, animasyonlu buyuk FLUGEL yazisi (sistem-bakim)
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/flugel
+ScriptFile=/usr/share/plymouth/themes/flugel/flugel.script

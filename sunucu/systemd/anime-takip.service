@@ -1,0 +1,8 @@
+[Unit]
+Description=MyAnimeList anime/manga takip botu
+After=network-online.target
+[Service]
+Type=oneshot
+User=flugel
+ExecStart=/usr/bin/python3 /opt/basket-bot/anime_takip.py
+TimeoutStartSec=5min

@@ -1,0 +1,7 @@
+[Unit]
+Description=Ev klasorunu flugelserver'a yedekle
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/pc-yedek.sh
+Nice=19
+IOSchedulingClass=idle

@@ -1,0 +1,6 @@
+[Unit]
+Description=FLUGEL Akis uyari dosyasini izle (sistem-bakim)
+[Path]
+PathModified=/opt/stacks/panel/akis/veri/uyari.jsonl
+[Install]
+WantedBy=multi-user.target

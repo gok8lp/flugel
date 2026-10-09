@@ -1,0 +1,10 @@
+[Unit]
+Description=Pil modu: fis cekilince otomatik tasarruf
+After=graphical-session.target
+PartOf=graphical-session.target
+[Service]
+ExecStart=%h/.local/bin/pil-modu
+Restart=on-failure
+RestartSec=5
+[Install]
+WantedBy=graphical-session.target

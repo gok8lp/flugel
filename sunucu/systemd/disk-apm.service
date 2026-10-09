@@ -1,0 +1,11 @@
+[Unit]
+Description=Samsung M3 USB disk APM 254 (kafa park onleme)
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/hdparm -B 254 /dev/disk/by-id/usb-Samsung_M3_Portable_923D7DF202000065-0:0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

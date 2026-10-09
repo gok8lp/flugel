@@ -1,0 +1,25 @@
+# flugelserver paneli (sistem-bakim) — "Bugun" sekmesi: haberler/maclar/sunucu durumu, "Uygulamalar": servisler
+title: FLUGEL
+description: flugelserver günlük paneli
+language: tr
+theme: dark
+color: slate
+headerStyle: clean
+statusStyle: dot
+hideVersion: true
+useEqualHeights: true
+target: _blank
+quicklaunch:
+  searchDescriptions: true
+  showSearchSuggestions: true
+  provider: google
+layout:
+  Durum: {tab: Bugün, style: row, columns: 3}
+  Haberler: {tab: Bugün, style: row, columns: 4}
+  Takip: {tab: Bugün}
+  Gunluk: {tab: Bugün}
+  Hesaplar: {tab: Bugün}
+  Medya: {tab: Uygulamalar, style: row, columns: 4}
+  Bulut: {tab: Uygulamalar, style: row, columns: 4}
+  Indirme: {tab: Uygulamalar, style: row, columns: 4}
+  Yonetim: {tab: Uygulamalar, style: row, columns: 4}

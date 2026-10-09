@@ -1,0 +1,15 @@
+- greeting:
+    text_size: 2xl
+    text: FLUGEL
+- datetime:
+    text_size: xl
+    format: {dateStyle: long, timeStyle: short, hourCycle: h23}
+- openmeteo:
+    label: Ankara
+    latitude: 39.93
+    longitude: 32.86
+    timezone: Europe/Istanbul
+    units: metric
+    cache: 10
+- resources: {cpu: true, memory: true, disk: [/, /mnt/side, /mnt/sidemain], cputemp: true, uptime: true}
+- search: {provider: google, target: _blank, showSearchSuggestions: true}

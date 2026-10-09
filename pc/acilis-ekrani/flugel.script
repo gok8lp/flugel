@@ -1,0 +1,104 @@
+# FLUGEL acilis ekrani (sistem-bakim)
+# Siyah zemin, buyuk FLUGEL yazisi ve altinda ince yukleme cubugu: harfler tek tek suzulerek belirir,
+# sonra uzerlerinden surekli bir isik dalgasi gecer.
+# Tasarim 2560x1600 icin; diger cozunurluklerde otomatik olceklenir.
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+EG = Window.GetWidth();
+EY = Window.GetHeight();
+EX = Window.GetX();
+EYY = Window.GetY();
+o = EY / 1600;
+
+fun yukle(ad) {
+    r = Image(ad);
+    return r.Scale(r.GetWidth() * o, r.GetHeight() * o);
+}
+
+# --- FLUGEL harfleri ---
+GEN = 1047;
+YUK = 371;
+of[0] = 0; of[1] = 158; of[2] = 321; of[3] = 535; of[4] = 752; of[5] = 918;
+sx = EX + EG / 2 - (GEN / 2 + 30) * o;
+sy = EYY + EY / 2 - (YUK / 2 + 20) * o;
+for (i = 0; i < 6; i++) {
+    harf[i] = Sprite(yukle("harf" + i + ".png"));
+    harf[i].SetPosition(sx + of[i] * o, sy + 60 * o, 10);
+    harf[i].SetOpacity(0);
+}
+
+# --- yukleme cubugu (yazinin altinda) ---
+cizgi_g = EG * 0.2;
+cizgi_x = EX + EG / 2 - cizgi_g / 2;
+cizgi_y = sy + (YUK + 70) * o;
+cizgi_kaynak = Image("cizgi.png");
+arka = Sprite(cizgi_kaynak.Scale(cizgi_g, 2));
+arka.SetPosition(cizgi_x, cizgi_y, 5);
+arka.SetOpacity(0.12);
+on = Sprite();
+on.SetPosition(cizgi_x, cizgi_y, 6);
+on.SetOpacity(0.85);
+ilerleme = 0;
+fun ilerleme_cb(sure, yuzde) {
+    if (yuzde > ilerleme) ilerleme = yuzde;
+    g = Math.Int(cizgi_g * ilerleme);
+    if (g < 2) g = 2;
+    on.SetImage(cizgi_kaynak.Scale(g, 2));
+}
+Plymouth.SetBootProgressFunction(ilerleme_cb);
+
+# --- animasyon (kare ~ 1/50 sn) ---
+t = 0;
+H_BAS = 10;
+ARA = 9;
+GIRIS = 24;
+DALGA = H_BAS + 5 * ARA + GIRIS;
+
+fun yumusak(p) {
+    if (p < 0) return 0;
+    if (p > 1) return 1;
+    return 1 - (1 - p) * (1 - p) * (1 - p);
+}
+
+fun yenile() {
+    t++;
+    for (i = 0; i < 6; i++) {
+        bas = H_BAS + i * ARA;
+        if (t < bas + GIRIS) {
+            e = yumusak((t - bas) / GIRIS);
+            harf[i].SetOpacity(e);
+            harf[i].SetY(sy + 60 * o * (1 - e));
+        } else {
+            harf[i].SetY(sy);
+            r = (t - DALGA) / 60;
+            if (r < 0) r = 0;
+            if (r > 1) r = 1;
+            d = 0.5 - 0.5 * Math.Cos((t - DALGA) * 0.075 - i * 0.85);
+            harf[i].SetOpacity(1 - r * 0.5 * d);
+        }
+    }
+}
+Plymouth.SetRefreshFunction(yenile);
+
+# --- sifre istenirse (normalde gorunmez) ---
+alt_y = cizgi_y + 30 * o;
+istem = Sprite();
+mermi = Sprite();
+fun sifre_cb(mesaj, adet) {
+    istem.SetImage(Image.Text(mesaj, 1, 1, 1, 0.8, "Ubuntu Sans 16"));
+    istem.SetPosition(EX + EG / 2 - istem.GetImage().GetWidth() / 2, alt_y, 20);
+    noktalar = "";
+    for (j = 0; j < adet; j++) noktalar = noktalar + "● ";
+    mermi.SetImage(Image.Text(noktalar + " ", 1, 1, 1, 1, "Ubuntu Sans 18"));
+    mermi.SetPosition(EX + EG / 2 - mermi.GetImage().GetWidth() / 2, alt_y + 40 * o, 20);
+    istem.SetOpacity(1);
+    mermi.SetOpacity(1);
+}
+fun normal_cb() {
+    istem.SetOpacity(0);
+    mermi.SetOpacity(0);
+}
+Plymouth.SetDisplayPasswordFunction(sifre_cb);
+Plymouth.SetDisplayNormalFunction(normal_cb);

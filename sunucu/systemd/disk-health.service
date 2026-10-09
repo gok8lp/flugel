@@ -1,0 +1,6 @@
+[Unit]
+Description=Disk saglik raporu
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/disk-health-report.sh

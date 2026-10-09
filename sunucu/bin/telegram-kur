@@ -1,0 +1,26 @@
+#!/bin/bash
+# Telegram bildirim kurulumu (sistem-bakim). Token'i gizli sorar, chat id'yi otomatik bulur.
+set -e
+echo "1) Telegram'da @BotFather'a yazin: /newbot -> bir ad -> sonu 'bot' ile biten kullanici adi."
+echo "2) BotFather'in verdigi token'i asagiya yapistirin (ekranda gorunmez):"
+read -rs -p "Token: " TOKEN; echo
+ME=$(curl -s -m 15 "https://api.telegram.org/bot${TOKEN}/getMe")
+echo "$ME" | grep -q '"ok":true' || { echo "Token gecersiz gorunuyor, tekrar deneyin."; exit 1; }
+KADI=$(echo "$ME" | python3 -c "import json,sys;print(json.load(sys.stdin)['result']['username'])")
+echo "Bot bulundu: @$KADI"
+echo "3) Simdi Telegram'da @$KADI botunu acip 'Start' (veya /start) yazin. Bekliyorum..."
+for i in $(seq 1 60); do
+  CID=$(curl -s -m 15 "https://api.telegram.org/bot${TOKEN}/getUpdates" | python3 -c "
+import json,sys
+r=json.load(sys.stdin).get('result',[])
+ids=[u['message']['chat']['id'] for u in r if 'message' in u]
+print(ids[-1] if ids else '')")
+  [ -n "$CID" ] && break; sleep 3
+done
+[ -z "$CID" ] && { echo "Mesaj gelmedi. Bota /start yazip tekrar calistirin."; exit 1; }
+sudo install -m 600 /dev/null /etc/sistem-bakim/telegram.env
+printf 'TELEGRAM_BOT_TOKEN=%s\nTELEGRAM_CHAT_ID=%s\n' "$TOKEN" "$CID" | sudo tee /etc/sistem-bakim/telegram.env >/dev/null
+unset TOKEN
+sudo /usr/local/bin/bildirim "Telegram bildirimleri kuruldu! Sunucu uyarilari ve basketbol mac atamalarin buraya gelecek. 🏀"
+echo "=== TAMAM: Telegram'a test mesaji gonderildi ==="
+echo "[$(date '+%F %T')] [SUNUCU] Telegram bildirimleri yapilandirildi (bot @$KADI)" >> /home/flugel/sistem-bakim/islem-kaydi.log

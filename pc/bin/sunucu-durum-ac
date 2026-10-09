@@ -1,0 +1,3 @@
+#!/bin/bash
+scp -q -o ConnectTimeout=8 flugelserver:sistem-bakim/durum/durum.html /tmp/sunucu-durum.html 2>/dev/null || echo "<h1>Sunucuya ulasilamadi</h1>" > /tmp/sunucu-durum.html
+exec google-chrome --app=file:///tmp/sunucu-durum.html --class=sunucu-durum
