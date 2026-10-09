@@ -36,7 +36,7 @@ GIZLI=~/.config/flugel-depo/gizli.txt
 [ -f "$GIZLI" ] || { echo "!!! $GIZLI yok, gonderilmedi"; exit 1; }
 while IFS=$'\t' read -r deger yer; do
   [ -n "$deger" ] || continue
-  grep -rlF -- "$deger" --exclude-dir=.git --exclude=guncelle.sh . | while read -r f; do
+  grep -rlF --exclude-dir=.git --exclude=guncelle.sh -- "$deger" . | while read -r f; do
     DEGER="$deger" YER="$yer" python3 -c 'import os,sys; p=sys.argv[1]; s=open(p,encoding="utf-8",errors="surrogateescape").read(); open(p,"w",encoding="utf-8",errors="surrogateescape").write(s.replace(os.environ["DEGER"], os.environ["YER"]))' "$f"
   done
 done < "$GIZLI"
